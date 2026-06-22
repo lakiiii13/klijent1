@@ -3,21 +3,40 @@ import { formatDateSr, serviceLabels } from './schedule.js'
 
 const salonEmail = process.env.SALON_EMAIL || 'majstorovic9@gmail.com'
 const salonName = process.env.SALON_NAME || 'La Vie Spray Tan Salon'
-const siteUrl = process.env.SITE_URL || 'http://localhost:5173'
+
+function getSiteUrl() {
+  return process.env.SITE_URL || 'http://localhost:5173'
+}
+
+let cachedTransporter = null
 
 function getTransporter() {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null
 
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT || 587),
-    secure: SMTP_PORT === '465',
-    auth: { user: SMTP_USER, pass: SMTP_PASS.replace(/\s/g, '') },
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 15_000,
-  })
+  if (cachedTransporter) return cachedTransporter
+
+  const pass = SMTP_PASS.replace(/\s/g, '')
+  const isGmail = SMTP_HOST.includes('gmail')
+
+  cachedTransporter = isGmail
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: SMTP_USER, pass },
+        pool: true,
+        maxConnections: 1,
+      })
+    : nodemailer.createTransport({
+        host: SMTP_HOST,
+        port: Number(SMTP_PORT || 587),
+        secure: SMTP_PORT === '465',
+        auth: { user: SMTP_USER, pass },
+        connectionTimeout: 15_000,
+        greetingTimeout: 15_000,
+        socketTimeout: 20_000,
+      })
+
+  return cachedTransporter
 }
 
 export function isSmtpConfigured() {
@@ -79,7 +98,7 @@ function bookingDetails(booking) {
 
 function cancelButton(booking) {
   if (!booking.cancel_token || booking.status === 'cancelled') return ''
-  const url = `${siteUrl}/otkazi/${booking.cancel_token}`
+  const url = `${getSiteUrl()}/otkazi/${booking.cancel_token}`
   return `
     <div style="margin-top:28px;padding:20px;border:1px solid #EDE6DF;background:#FDFBF9;text-align:center;">
       <p style="margin:0 0 14px;font-family:sans-serif;font-size:13px;color:#6B5E58;">
@@ -103,14 +122,22 @@ async function sendMail({ to, subject, html }) {
   }
 
   try {
-    await transporter.sendMail({
-      from: `"${salonName}" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-      html,
-    })
-    console.log(`📧 Email poslat → ${to}: ${subject}`)
-    return { sent: true }
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        await transporter.sendMail({
+          from: `"${salonName}" <${process.env.SMTP_USER}>`,
+          to,
+          subject,
+          html,
+        })
+        console.log(`📧 Email poslat → ${to}: ${subject}`)
+        return { sent: true }
+      } catch (err) {
+        if (attempt === 2) throw err
+        cachedTransporter = null
+        console.warn(`📧 Email retry (${attempt}/2) → ${to}: ${err.message}`)
+      }
+    }
   } catch (err) {
     console.error(`📧 Email GREŠKA → ${to}: ${err.message}`)
     throw err

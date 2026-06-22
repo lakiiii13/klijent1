@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { services } from '../data/site'
 import { getSlots, createBooking } from '../lib/api'
+import { slotButtonClass } from '../lib/slotStyles'
 
 function tomorrowISO() {
   const d = new Date()
@@ -26,11 +27,13 @@ export default function BookingForm() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  useEffect(() => {
-    if (!form.booking_date) return
+  const [slotsRefresh, setSlotsRefresh] = useState(0)
+
+  const loadSlots = useCallback((date) => {
+    if (!date) return
     setLoadingSlots(true)
     setError('')
-    getSlots(form.booking_date)
+    getSlots(date)
       .then((data) => {
         setClosed(data.closed)
         const list = data.slots || []
@@ -44,7 +47,11 @@ export default function BookingForm() {
       })
       .catch(() => setError('Nije moguće učitati termine.'))
       .finally(() => setLoadingSlots(false))
-  }, [form.booking_date])
+  }, [])
+
+  useEffect(() => {
+    loadSlots(form.booking_date)
+  }, [form.booking_date, slotsRefresh, loadSlots])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -57,6 +64,7 @@ export default function BookingForm() {
     try {
       await createBooking(form)
       setSuccess(true)
+      setSlotsRefresh((n) => n + 1)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -183,22 +191,21 @@ export default function BookingForm() {
           <p className="text-sm text-ink-muted">Svi termini su zauzeti za ovaj dan.</p>
         ) : (
           <div className="grid max-h-64 grid-cols-4 gap-1.5 overflow-y-auto sm:grid-cols-6 sm:max-h-none sm:gap-2">
-            {slots.map(({ time, available }) => (
+            {slots.map(({ time, available, occupied }) => (
               <button
                 key={time}
                 type="button"
                 disabled={!available}
                 onClick={() => available && setForm({ ...form, booking_time: time })}
-                className={`relative py-2 text-[11px] font-medium transition-all sm:py-2.5 sm:text-xs ${
-                  !available
-                    ? 'cursor-not-allowed border border-brown/10 bg-cream-dark text-ink-muted/40 line-through'
-                    : form.booking_time === time
-                      ? 'bg-brown text-white'
-                      : 'border border-brown/20 text-ink-muted hover:border-brown'
-                }`}
+                className={`relative py-2 text-[11px] font-medium transition-all sm:py-2.5 sm:text-xs ${slotButtonClass({
+                  time,
+                  available,
+                  occupied,
+                  selected: form.booking_time === time,
+                })}`}
               >
                 {time}
-                {!available && (
+                {occupied && (
                   <span className="absolute -right-1 -top-1 text-[8px] text-red-400">✕</span>
                 )}
               </button>

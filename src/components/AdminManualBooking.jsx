@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { services } from '../data/site'
 import { getSlots, createAdminBooking } from '../lib/api'
+import { slotButtonClass } from '../lib/slotStyles'
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -178,19 +179,18 @@ export default function AdminManualBooking({ onCreated }) {
                   <p className="text-sm text-ink-muted">Nema slobodnih termina.</p>
                 ) : (
                   <div className="grid max-h-36 grid-cols-4 gap-1.5 overflow-y-auto sm:grid-cols-5">
-                    {slots.map(({ time, available }) => (
+                    {slots.map(({ time, available, occupied }) => (
                       <button
                         key={time}
                         type="button"
                         disabled={!available}
                         onClick={() => available && setForm({ ...form, booking_time: time })}
-                        className={`py-2 text-[11px] font-medium ${
-                          !available
-                            ? 'line-through opacity-30'
-                            : form.booking_time === time
-                              ? 'bg-brown text-white'
-                              : 'border border-brown/20 text-ink-muted hover:border-brown'
-                        }`}
+                        className={`py-2 text-[11px] font-medium ${slotButtonClass({
+                          time,
+                          available,
+                          occupied,
+                          selected: form.booking_time === time,
+                        })}`}
                       >
                         {time}
                       </button>

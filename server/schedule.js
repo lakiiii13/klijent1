@@ -48,13 +48,30 @@ function rangesOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && bStart < aEnd
 }
 
-function overlapsBooking(rangeStart, rangeEnd, bookedSlots, appointmentDuration) {
+function bookingWindow(booking, appointmentDuration) {
+  const start = parseTime(booking.booking_time)
+  return { start, end: start + appointmentDuration }
+}
+
+/** Da li 10-min slot [slotStart, slotStart+interval) pada u zauzet termin */
+function isSlotOccupied(slotStart, bookedSlots, appointmentDuration) {
+  const slotEnd = slotStart + SLOT_INTERVAL
   for (const b of bookedSlots) {
-    const bookedStart = parseTime(b.booking_time)
-    const bookedEnd = bookedStart + appointmentDuration
-    if (rangesOverlap(rangeStart, rangeEnd, bookedStart, bookedEnd)) return true
+    const { start, end } = bookingWindow(b, appointmentDuration)
+    if (rangesOverlap(slotStart, slotEnd, start, end)) return true
   }
   return false
+}
+
+/** Da li može da počne novi termin u slotStart (puna dužina tretmana) */
+function canStartAt(slotStart, periodEnd, bookedSlots, appointmentDuration) {
+  if (slotStart + appointmentDuration > periodEnd) return false
+  const rangeEnd = slotStart + appointmentDuration
+  for (const b of bookedSlots) {
+    const { start, end } = bookingWindow(b, appointmentDuration)
+    if (rangesOverlap(slotStart, rangeEnd, start, end)) return false
+  }
+  return true
 }
 
 function findPeriodContaining(periods, timeStr, appointmentDuration) {
@@ -86,11 +103,12 @@ export function getAllSlotsWithAvailability(dateStr, bookedSlots = []) {
       seen.add(time)
 
       const fitsInPeriod = t + appointmentDuration <= end
+      const occupied = isSlotOccupied(t, bookedSlots, appointmentDuration)
+      const available = fitsInPeriod && canStartAt(t, end, bookedSlots, appointmentDuration)
       slots.push({
         time,
-        available:
-          fitsInPeriod &&
-          !overlapsBooking(t, t + appointmentDuration, bookedSlots, appointmentDuration),
+        available,
+        occupied,
       })
     }
   }
@@ -123,7 +141,8 @@ export function isTimeSlotAvailableOnDate(dateStr, timeStr, bookedSlots = []) {
   if (!findPeriodContaining(periods, timeStr, appointmentDuration)) return false
 
   const start = parseTime(timeStr)
-  return !overlapsBooking(start, start + appointmentDuration, bookedSlots, appointmentDuration)
+  const period = findPeriodContaining(periods, timeStr, appointmentDuration)
+  return canStartAt(start, parseTime(period.end), bookedSlots, appointmentDuration)
 }
 
 export function formatDateSr(dateStr) {

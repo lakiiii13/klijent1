@@ -165,9 +165,11 @@ export function getSalonSettings() {
   }
 
   const duration = Number(map.appointment_duration)
+  const allowedDurations = [20, 30, 40, 50, 60, 90, 120]
   return {
-    appointmentDuration:
-      duration >= 10 && duration % 10 === 0 ? duration : DEFAULT_SALON_SETTINGS.appointmentDuration,
+    appointmentDuration: allowedDurations.includes(duration)
+      ? duration
+      : DEFAULT_SALON_SETTINGS.appointmentDuration,
     schedule,
   }
 }
