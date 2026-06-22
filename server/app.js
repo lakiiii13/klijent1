@@ -136,7 +136,11 @@ app.post('/api/bookings', async (req, res) => {
       notes: notes?.trim() || '',
     })
 
-    sendEmailsInBackground(() => sendNewBookingEmails(booking), 'nova rezervacija')
+    try {
+      await sendNewBookingEmails(booking)
+    } catch (err) {
+      console.error('Email nije poslat (nova rezervacija):', err.message)
+    }
 
     res.status(201).json({
       message: 'Rezervacija je poslata! Potvrdu ćete dobiti na email.',
