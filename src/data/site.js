@@ -36,8 +36,7 @@ export const images = {
   bronze: {
     src: '/assets/1000063219.jpg',
     alt: 'Tamnija varijanta potamnjivanja',
-    position: '76% 38%',
-    fillFrame: true,
+    position: 'center center',
   },
 }
 

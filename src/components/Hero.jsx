@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { site } from '../data/site'
@@ -58,12 +59,12 @@ export default function Hero() {
             >
               OTKRIJTE USLUGE
             </a>
-            <a
-              href="#kontakt"
+            <Link
+              to="/booking"
               className="flex-1 border border-brown px-3 py-3.5 text-center text-[9px] font-semibold tracking-[0.1em] text-ink transition-all hover:bg-brown hover:text-white sm:flex-none sm:px-8 sm:py-4 sm:text-[11px] sm:tracking-[0.15em]"
             >
               ZAKAZIVANJE
-            </a>
+            </Link>
           </motion.div>
 
           <motion.p

@@ -1,7 +1,7 @@
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { site } from '../data/site'
-import { slideInLeft, slideInRight, viewport } from '../lib/motion'
-import BookingForm from './BookingForm'
+import { slideInLeft, viewport } from '../lib/motion'
 
 function Icon({ children }) {
   return (
@@ -18,22 +18,30 @@ export default function Contact() {
         L
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl gap-16 px-6 lg:grid-cols-2 lg:gap-20 lg:px-8">
+      <div className="relative mx-auto max-w-6xl px-6 lg:px-8">
         <motion.div
           variants={slideInLeft}
           initial="hidden"
           whileInView="visible"
           viewport={viewport}
+          className="mx-auto max-w-2xl text-center"
         >
           <h2 className="mb-6 font-serif text-[clamp(2rem,3.5vw,2.8rem)] font-medium text-ink">
             Vreme je da zablistate.
           </h2>
-          <p className="mb-12 max-w-md text-[17px] leading-[1.75] text-ink-muted lg:text-[18px]">
-            Izaberite uslugu, datum i termin — potvrdu ćete dobiti na email čim salon pregleda
-            rezervaciju.
+          <p className="mb-10 text-[17px] leading-[1.75] text-ink-muted lg:text-[18px]">
+            Zakažite termin online ili nas kontaktirajte direktno — potvrdu ćete dobiti na email čim
+            salon pregleda rezervaciju.
           </p>
 
-          <ul className="mb-10 space-y-6">
+          <Link
+            to="/booking"
+            className="mb-14 inline-block bg-brown px-10 py-4 text-[11px] font-semibold tracking-[0.15em] text-white transition-colors hover:bg-brown-dark"
+          >
+            ZAKAZI TERMIN ONLINE
+          </Link>
+
+          <ul className="mb-10 space-y-6 text-left sm:mx-auto sm:max-w-md">
             <li className="flex items-start gap-4 text-[16px] leading-relaxed text-ink lg:text-[17px]">
               <Icon>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
@@ -86,15 +94,6 @@ export default function Contact() {
             </svg>
             {site.instagramHandle}
           </a>
-        </motion.div>
-
-        <motion.div
-          variants={slideInRight}
-          initial="hidden"
-          whileInView="visible"
-          viewport={viewport}
-        >
-          <BookingForm />
         </motion.div>
       </div>
     </section>

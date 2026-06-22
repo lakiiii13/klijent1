@@ -49,9 +49,9 @@ export default function HomePage() {
         <Hero />
         <Philosophy />
         <Services />
+        <Contact />
         <Lookbook />
         <Testimonial />
-        <Contact />
       </main>
       <Footer />
     </>

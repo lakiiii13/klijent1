@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { navLinks, site } from '../data/site'
 
@@ -68,12 +69,12 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <a
-          href="#kontakt"
+        <Link
+          to="/booking"
           className="hidden bg-brown px-6 py-3 text-[10px] font-semibold tracking-[0.15em] text-white transition-colors hover:bg-brown-dark md:inline-block"
         >
           ZAKAZIVANJE
-        </a>
+        </Link>
 
         <button
           type="button"
@@ -122,13 +123,13 @@ export default function Navbar() {
                 </motion.li>
               ))}
               <li>
-                <a
-                  href="#kontakt"
+                <Link
+                  to="/booking"
                   onClick={() => setOpen(false)}
                   className="inline-block bg-brown px-6 py-3 text-[10px] font-semibold tracking-[0.15em] text-white"
                 >
                   ZAKAZIVANJE
-                </a>
+                </Link>
               </li>
             </ul>
           </motion.div>

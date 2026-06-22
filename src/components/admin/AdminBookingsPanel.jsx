@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { services } from '../../data/site'
 import AdminManualBooking from '../AdminManualBooking'
 
@@ -29,6 +30,58 @@ function StatCard({ label, value, accent }) {
   )
 }
 
+function CancelConfirmModal({ booking, loading, onConfirm, onCancel }) {
+  if (!booking) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Zatvori"
+        className="absolute inset-0 bg-ink/40"
+        onClick={onCancel}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        className="relative w-full max-w-md bg-white p-6 shadow-xl sm:p-8"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-modal-title"
+      >
+        <h2 id="cancel-modal-title" className="mb-3 font-serif text-xl text-ink">
+          Otkaži rezervaciju?
+        </h2>
+        <p className="mb-2 text-sm text-ink-muted">
+          Da li ste sigurni da želite da otkažete ovu rezervaciju?
+        </p>
+        <p className="mb-6 rounded-sm bg-cream px-3 py-2 text-sm text-ink">
+          <strong>{booking.name}</strong> — {formatDate(booking.booking_date)} u {booking.booking_time}
+        </p>
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="border border-brown/20 px-5 py-2.5 text-xs font-semibold tracking-[0.1em] text-ink-muted hover:bg-cream disabled:opacity-50"
+          >
+            Ne, nazad
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className="bg-red-600 px-5 py-2.5 text-xs font-semibold tracking-[0.1em] text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {loading ? 'Otkazuje se...' : 'Da, otkaži'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 export default function AdminBookingsPanel({
   bookings,
   filtered,
@@ -44,6 +97,8 @@ export default function AdminBookingsPanel({
   onStatusChange,
   onCreated,
 }) {
+  const [cancelTarget, setCancelTarget] = useState(null)
+
   const pendingCount = bookings.filter(
     (b) => b.status === 'pending' && matchesDateFilter(b.booking_date, dateFilter)
   ).length
@@ -51,15 +106,33 @@ export default function AdminBookingsPanel({
     (b) => b.status === 'confirmed' && matchesDateFilter(b.booking_date, dateFilter)
   ).length
 
+  const requestCancel = (booking) => setCancelTarget(booking)
+
+  const confirmCancel = async () => {
+    if (!cancelTarget) return
+    await onStatusChange(cancelTarget.id, 'cancelled')
+    setCancelTarget(null)
+  }
+
   return (
     <div className="space-y-6">
+      <AnimatePresence>
+        {cancelTarget && (
+          <CancelConfirmModal
+            booking={cancelTarget}
+            loading={actionId === cancelTarget.id}
+            onConfirm={confirmCancel}
+            onCancel={() => !actionId && setCancelTarget(null)}
+          />
+        )}
+      </AnimatePresence>
+
       {actionError && (
         <div className="rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
 
-      {/* Statistika */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="AKTIVNI TERMINI" value={countForDate(dateFilter)} accent="text-brown" />
         <StatCard label="NA ČEKANJU" value={pendingCount} accent="text-amber-700" />
@@ -67,7 +140,6 @@ export default function AdminBookingsPanel({
         <StatCard label="UKUPNO U BAZI" value={bookings.length} />
       </div>
 
-      {/* Toolbar */}
       <div className="rounded-sm border border-brown/10 bg-white p-4 lg:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-medium text-ink">Filteri</p>
@@ -125,7 +197,6 @@ export default function AdminBookingsPanel({
         </div>
       </div>
 
-      {/* Lista */}
       {loading && bookings.length === 0 ? (
         <p className="text-sm text-ink-muted">Učitavanje...</p>
       ) : filtered.length === 0 ? (
@@ -142,7 +213,6 @@ export default function AdminBookingsPanel({
               className="overflow-hidden rounded-sm border border-brown/10 bg-white"
             >
               <div className="flex flex-col sm:flex-row">
-                {/* Vreme */}
                 <div className="flex shrink-0 items-center justify-center border-b border-brown/10 bg-cream/50 px-6 py-4 sm:w-28 sm:border-b-0 sm:border-r">
                   <div className="text-center">
                     <p className="font-serif text-2xl text-brown">{b.booking_time}</p>
@@ -152,7 +222,6 @@ export default function AdminBookingsPanel({
                   </div>
                 </div>
 
-                {/* Info */}
                 <div className="flex flex-1 flex-wrap items-start justify-between gap-4 p-5">
                   <div className="min-w-0">
                     <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -187,7 +256,7 @@ export default function AdminBookingsPanel({
                         <button
                           type="button"
                           disabled={actionId === b.id}
-                          onClick={() => onStatusChange(b.id, 'cancelled')}
+                          onClick={() => requestCancel(b)}
                           className="border border-red-200 px-4 py-2 text-[10px] font-semibold tracking-[0.1em] text-red-600 hover:bg-red-50 disabled:opacity-50"
                         >
                           OTKAŽI
@@ -198,7 +267,7 @@ export default function AdminBookingsPanel({
                       <button
                         type="button"
                         disabled={actionId === b.id}
-                        onClick={() => onStatusChange(b.id, 'cancelled')}
+                        onClick={() => requestCancel(b)}
                         className="border border-red-200 px-4 py-2 text-[10px] font-semibold tracking-[0.1em] text-red-600 hover:bg-red-50"
                       >
                         OTKAŽI

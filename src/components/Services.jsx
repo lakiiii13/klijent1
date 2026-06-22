@@ -4,27 +4,18 @@ import { services } from '../data/site'
 import { fadeUp, staggerContainer, viewport } from '../lib/motion'
 
 function ServiceCard({ service, className = '' }) {
-  const fillFrame = service.image.fillFrame
-
   return (
     <article className={`group ${className}`}>
-      <div
-        className={`relative mb-5 overflow-hidden bg-cream-muted/40 md:mb-6 ${
-          fillFrame ? 'aspect-[3/4]' : 'md:aspect-square'
-        }`}
-      >
+      <div className="relative mb-5 aspect-[4/5] overflow-hidden bg-cream-muted/40 md:mb-6">
         <img
           src={service.image.src}
           alt={service.image.alt}
-          className={
-            fillFrame
-              ? 'h-full w-full object-cover md:transition-transform md:duration-700 md:group-hover:scale-105'
-              : 'mx-auto h-auto max-h-[min(72vw,480px)] w-full object-contain md:h-full md:max-h-none md:object-cover md:transition-transform md:duration-700 md:group-hover:scale-105'
-          }
-          style={{ objectPosition: service.image.position }}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          style={{ objectPosition: service.image.position || 'center center' }}
         />
-        <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-brown-darker/40 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 md:block" />
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 hidden translate-y-full p-5 transition-transform duration-500 group-hover:translate-y-0 md:block">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-brown-darker/55 via-brown-darker/10 to-brown/5" />
+        <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-brown/10" />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-5">
           <span className="text-[10px] font-semibold tracking-[0.2em] text-white/90">
             {service.price.toUpperCase()}
           </span>
@@ -61,7 +52,6 @@ export default function Services() {
           </h2>
         </motion.div>
 
-        {/* Mobil — swipe kroz usluge, cela slika */}
         <div className="md:hidden">
           <div
             className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -72,10 +62,7 @@ export default function Services() {
             }}
           >
             {services.map((service) => (
-              <div
-                key={service.id}
-                className="w-[88vw] max-w-md shrink-0 snap-center"
-              >
+              <div key={service.id} className="w-[88vw] max-w-md shrink-0 snap-center">
                 <ServiceCard service={service} />
               </div>
             ))}
@@ -95,7 +82,6 @@ export default function Services() {
           </div>
         </div>
 
-        {/* Desktop — grid */}
         <motion.div
           variants={staggerContainer}
           initial="hidden"

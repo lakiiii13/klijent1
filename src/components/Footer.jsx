@@ -34,6 +34,9 @@ export default function Footer() {
                 </a>
               </li>
             ))}
+            <li>
+              <a href="/booking" className="transition-colors hover:text-white">Zakazivanje</a>
+            </li>
           </ul>
         </motion.div>
 

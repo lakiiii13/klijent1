@@ -15,15 +15,15 @@ export default function AdminLayout({
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-cream-dark lg:flex">
-      {/* Sidebar — desktop */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-brown/10 bg-white lg:flex">
+    <div className="min-h-screen bg-cream-dark lg:h-screen lg:overflow-hidden">
+      {/* Sidebar — fixed desktop */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-brown/10 bg-white lg:flex">
         <div className="border-b border-brown/10 px-6 py-7">
           <span className="block font-serif text-2xl tracking-[0.12em] text-brown-dark">LA VIE</span>
           <span className="mt-1 block text-[10px] tracking-[0.22em] text-ink-muted">ADMIN PANEL</span>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 p-4">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-4">
           {NAV.map((item) => (
             <button
               key={item.id}
@@ -41,7 +41,7 @@ export default function AdminLayout({
           ))}
         </nav>
 
-        <div className="space-y-1 border-t border-brown/10 p-4">
+        <div className="shrink-0 space-y-1 border-t border-brown/10 p-4">
           <button
             type="button"
             onClick={onRefresh}
@@ -113,9 +113,9 @@ export default function AdminLayout({
         </header>
       </div>
 
-      {/* Main */}
-      <div className="min-w-0 flex-1">
-        <div className="hidden border-b border-brown/10 bg-white px-8 py-6 lg:block">
+      {/* Main — scrollable */}
+      <div className="flex min-h-screen min-w-0 flex-col lg:ml-60 lg:h-screen lg:overflow-y-auto">
+        <div className="hidden shrink-0 border-b border-brown/10 bg-white px-8 py-6 lg:block">
           <h1 className="font-serif text-2xl text-ink">
             {tab === 'bookings' ? 'Rezervacije' : 'Radno vreme'}
           </h1>
@@ -126,7 +126,7 @@ export default function AdminLayout({
           </p>
         </div>
 
-        <main className="px-4 py-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="flex-1 px-4 py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   )
