@@ -39,7 +39,7 @@ export default function AdminManualBooking({ onCreated }) {
             list.find((s) => s.time === f.booking_time && s.available)?.time || firstFree || '',
         }))
       })
-      .catch(() => setError('Nije moguće učitati termine.'))
+      .catch((err) => setError(err.message || 'Nije moguće učitati termine.'))
       .finally(() => setLoadingSlots(false))
   }, [open, form.booking_date])
 

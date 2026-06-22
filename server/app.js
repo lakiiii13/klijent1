@@ -87,6 +87,12 @@ app.get('/api/health', async (_req, res) => {
 
 app.get('/api/slots', async (req, res) => {
   try {
+    if (!isSupabaseConfigured()) {
+      return res.status(503).json({
+        error: 'Baza nije podešena na serveru. Dodaj SUPABASE_URL i SUPABASE_SERVICE_ROLE_KEY pa redeploy.',
+      })
+    }
+
     const { date } = req.query
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ error: 'Neispravan datum.' })
