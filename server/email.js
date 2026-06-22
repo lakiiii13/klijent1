@@ -8,6 +8,22 @@ function getSiteUrl() {
   return process.env.SITE_URL || 'http://localhost:5173'
 }
 
+export function getEmailProvider() {
+  if (process.env.RESEND_API_KEY) return 'resend'
+  if (process.env.BREVO_API_KEY) return 'brevo'
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) return 'smtp'
+  return null
+}
+
+export function isEmailConfigured() {
+  return Boolean(getEmailProvider())
+}
+
+/** @deprecated use isEmailConfigured */
+export function isSmtpConfigured() {
+  return isEmailConfigured()
+}
+
 let cachedTransporter = null
 
 function getTransporter() {
@@ -23,8 +39,6 @@ function getTransporter() {
     ? nodemailer.createTransport({
         service: 'gmail',
         auth: { user: SMTP_USER, pass },
-        pool: true,
-        maxConnections: 1,
       })
     : nodemailer.createTransport({
         host: SMTP_HOST,
@@ -39,22 +53,85 @@ function getTransporter() {
   return cachedTransporter
 }
 
-export function isSmtpConfigured() {
-  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env
-  return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS)
+async function sendViaResend({ to, subject, html }) {
+  const from = process.env.EMAIL_FROM || `${salonName} <onboarding@resend.dev>`
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from, to, subject, html }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(body || `Resend HTTP ${res.status}`)
+  }
 }
 
-export async function verifySmtpConnection() {
+async function sendViaBrevo({ to, subject, html }) {
+  const senderEmail =
+    process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || salonEmail
+
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: salonName, email: senderEmail },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(body || `Brevo HTTP ${res.status}`)
+  }
+}
+
+async function sendViaSmtp({ to, subject, html }) {
+  const transporter = getTransporter()
+  if (!transporter) throw new Error('SMTP nije podešen')
+
+  await transporter.sendMail({
+    from: `"${salonName}" <${process.env.SMTP_USER}>`,
+    to,
+    subject,
+    html,
+  })
+}
+
+export async function verifyEmailConnection() {
+  const provider = getEmailProvider()
+  if (!provider) {
+    return { ok: false, error: 'Email nije podešen (dodaj BREVO_API_KEY ili RESEND_API_KEY na Renderu)' }
+  }
+
+  if (provider === 'resend' || provider === 'brevo') {
+    return { ok: true, provider }
+  }
+
   const transporter = getTransporter()
   if (!transporter) {
-    return { ok: false, error: 'SMTP nije podešen (SMTP_USER / SMTP_PASS na Renderu)' }
+    return { ok: false, error: 'SMTP nije podešen' }
   }
+
   try {
     await transporter.verify()
-    return { ok: true }
+    return { ok: true, provider: 'smtp' }
   } catch (err) {
-    return { ok: false, error: err.message }
+    return { ok: false, error: err.message, provider: 'smtp' }
   }
+}
+
+/** @deprecated */
+export async function verifySmtpConnection() {
+  return verifyEmailConnection()
 }
 
 function baseTemplate(title, body) {
@@ -115,31 +192,24 @@ function cancelButton(booking) {
 }
 
 async function sendMail({ to, subject, html }) {
-  const transporter = getTransporter()
-  if (!transporter) {
-    console.warn(`📧 EMAIL preskočen (SMTP nije podešen) → To: ${to}, Subject: ${subject}`)
+  const provider = getEmailProvider()
+  if (!provider) {
+    console.warn(`📧 EMAIL preskočen (nije podešen) → To: ${to}, Subject: ${subject}`)
     return { sent: false, logged: true }
   }
 
+  const senders = {
+    resend: sendViaResend,
+    brevo: sendViaBrevo,
+    smtp: sendViaSmtp,
+  }
+
   try {
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
-      try {
-        await transporter.sendMail({
-          from: `"${salonName}" <${process.env.SMTP_USER}>`,
-          to,
-          subject,
-          html,
-        })
-        console.log(`📧 Email poslat → ${to}: ${subject}`)
-        return { sent: true }
-      } catch (err) {
-        if (attempt === 2) throw err
-        cachedTransporter = null
-        console.warn(`📧 Email retry (${attempt}/2) → ${to}: ${err.message}`)
-      }
-    }
+    await senders[provider]({ to, subject, html })
+    console.log(`📧 Email poslat [${provider}] → ${to}: ${subject}`)
+    return { sent: true, provider }
   } catch (err) {
-    console.error(`📧 Email GREŠKA → ${to}: ${err.message}`)
+    console.error(`📧 Email GREŠKA [${provider}] → ${to}: ${err.message}`)
     throw err
   }
 }

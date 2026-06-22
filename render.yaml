@@ -27,3 +27,7 @@ services:
         sync: false
       - key: SITE_URL
         value: https://la-vie-salon.onrender.com
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false

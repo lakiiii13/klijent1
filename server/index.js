@@ -28,7 +28,7 @@ import {
   DAY_LABELS,
   APPOINTMENT_DURATION_OPTIONS,
 } from './schedule.js'
-import { sendNewBookingEmails, sendStatusEmail, sendClientSelfCancelEmails, isSmtpConfigured, verifySmtpConnection } from './email.js'
+import { sendNewBookingEmails, sendStatusEmail, sendClientSelfCancelEmails, isEmailConfigured, getEmailProvider, verifyEmailConnection } from './email.js'
 import {
   authMiddleware,
   checkAdminPassword,
@@ -62,7 +62,8 @@ app.get('/api/health', (_req, res) => {
     database: 'sqlite',
     databasePath,
     bookingCount: bookings.length,
-    smtpConfigured: isSmtpConfigured(),
+    smtpConfigured: isEmailConfigured(),
+    emailProvider: getEmailProvider(),
     siteUrl: process.env.SITE_URL || null,
   })
 })
@@ -318,14 +319,14 @@ const server = app.listen(PORT, async () => {
   console.log(`   SITE_URL: ${process.env.SITE_URL || '(nije podešen)'}`)
   console.log(`   SALON_EMAIL: ${process.env.SALON_EMAIL || '(nije podešen)'}`)
 
-  if (!isSmtpConfigured()) {
-    console.warn('   ⚠️  SMTP nije podešen — mejlovi se NE šalju. Postavi SMTP_USER i SMTP_PASS na Renderu.')
+  if (!isEmailConfigured()) {
+    console.warn('   ⚠️  Email nije podešen — dodaj BREVO_API_KEY na Renderu (Gmail SMTP ne radi sa Rendera).')
   } else {
-    const smtp = await verifySmtpConnection()
-    if (smtp.ok) {
-      console.log('   ✅ SMTP konekcija OK')
+    const email = await verifyEmailConnection()
+    if (email.ok) {
+      console.log(`   ✅ Email spreman [${email.provider}]`)
     } else {
-      console.error(`   ❌ SMTP greška: ${smtp.error}`)
+      console.error(`   ❌ Email greška: ${email.error}`)
     }
   }
   console.log('')
