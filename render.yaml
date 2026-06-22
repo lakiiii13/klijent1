@@ -17,14 +17,6 @@ services:
         value: La Vie Spray Tan Salon
       - key: ADMIN_PASSWORD
         sync: false
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
       - key: SITE_URL
         value: https://la-vie-salon.onrender.com
       - key: BREVO_API_KEY

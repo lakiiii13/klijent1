@@ -53,6 +53,16 @@ export default function BookingForm() {
     loadSlots(form.booking_date)
   }, [form.booking_date, slotsRefresh, loadSlots])
 
+  const handleSlotClick = (slot) => {
+    if (slot.occupied) return
+    if (!slot.available) {
+      setError('Termin se preklapa sa postojećom rezervacijom. Izaberite drugo vreme.')
+      return
+    }
+    setError('')
+    setForm({ ...form, booking_time: slot.time })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.booking_time) {
@@ -191,21 +201,19 @@ export default function BookingForm() {
           <p className="text-sm text-ink-muted">Svi termini su zauzeti za ovaj dan.</p>
         ) : (
           <div className="grid max-h-64 grid-cols-4 gap-1.5 overflow-y-auto sm:grid-cols-6 sm:max-h-none sm:gap-2">
-            {slots.map(({ time, available, occupied }) => (
+            {slots.map((slot) => (
               <button
-                key={time}
+                key={slot.time}
                 type="button"
-                disabled={!available}
-                onClick={() => available && setForm({ ...form, booking_time: time })}
+                disabled={slot.occupied}
+                onClick={() => handleSlotClick(slot)}
                 className={`relative py-2 text-[11px] font-medium transition-all sm:py-2.5 sm:text-xs ${slotButtonClass({
-                  time,
-                  available,
-                  occupied,
-                  selected: form.booking_time === time,
+                  occupied: slot.occupied,
+                  selected: form.booking_time === slot.time,
                 })}`}
               >
-                {time}
-                {occupied && (
+                {slot.time}
+                {slot.occupied && (
                   <span className="absolute -right-1 -top-1 text-[8px] text-red-400">✕</span>
                 )}
               </button>

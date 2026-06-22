@@ -179,20 +179,26 @@ export default function AdminManualBooking({ onCreated }) {
                   <p className="text-sm text-ink-muted">Nema slobodnih termina.</p>
                 ) : (
                   <div className="grid max-h-36 grid-cols-4 gap-1.5 overflow-y-auto sm:grid-cols-5">
-                    {slots.map(({ time, available, occupied }) => (
+                    {slots.map((slot) => (
                       <button
-                        key={time}
+                        key={slot.time}
                         type="button"
-                        disabled={!available}
-                        onClick={() => available && setForm({ ...form, booking_time: time })}
+                        disabled={slot.occupied}
+                        onClick={() => {
+                          if (slot.occupied) return
+                          if (!slot.available) {
+                            setError('Termin se preklapa sa postojećom rezervacijom.')
+                            return
+                          }
+                          setError('')
+                          setForm({ ...form, booking_time: slot.time })
+                        }}
                         className={`py-2 text-[11px] font-medium ${slotButtonClass({
-                          time,
-                          available,
-                          occupied,
-                          selected: form.booking_time === time,
+                          occupied: slot.occupied,
+                          selected: form.booking_time === slot.time,
                         })}`}
                       >
-                        {time}
+                        {slot.time}
                       </button>
                     ))}
                   </div>

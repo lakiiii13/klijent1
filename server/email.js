@@ -11,6 +11,8 @@ function getSiteUrl() {
 export function getEmailProvider() {
   if (process.env.RESEND_API_KEY) return 'resend'
   if (process.env.BREVO_API_KEY) return 'brevo'
+  // Gmail SMTP ne radi sa Rendera — u produkciji samo HTTP API
+  if (process.env.NODE_ENV === 'production') return null
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) return 'smtp'
   return null
 }

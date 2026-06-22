@@ -320,7 +320,12 @@ const server = app.listen(PORT, async () => {
   console.log(`   SALON_EMAIL: ${process.env.SALON_EMAIL || '(nije podešen)'}`)
 
   if (!isEmailConfigured()) {
-    console.warn('   ⚠️  Email nije podešen — dodaj BREVO_API_KEY na Renderu (Gmail SMTP ne radi sa Rendera).')
+    if (process.env.NODE_ENV === 'production') {
+      console.error('   ❌ MEJLOVI NE RADE — dodaj BREVO_API_KEY na Renderu (Settings → SMTP & API → API Keys)')
+      console.error('      Obriši SMTP_USER i SMTP_PASS sa Rendera — Gmail ne radi u cloudu.')
+    } else {
+      console.warn('   ⚠️  Email nije podešen — dodaj BREVO_API_KEY ili SMTP u .env')
+    }
   } else {
     const email = await verifyEmailConnection()
     if (email.ok) {
