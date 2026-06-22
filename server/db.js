@@ -5,10 +5,13 @@ import { dirname, join } from 'path'
 import { mkdirSync, existsSync } from 'fs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const dataDir = join(__dirname, '..', 'data')
+const dataDir = process.env.DATA_DIR || join(__dirname, '..', 'data')
 if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true })
 
-const db = new Database(join(dataDir, 'bookings.db'))
+const dbPath = join(dataDir, 'bookings.db')
+const db = new Database(dbPath)
+
+export const databasePath = dbPath
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS bookings (

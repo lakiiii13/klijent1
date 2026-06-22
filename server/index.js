@@ -16,6 +16,7 @@ import {
   cancelBookingByToken,
   getSalonSettings,
   saveSalonSettings,
+  databasePath,
 } from './db.js'
 import {
   getAllSlotsWithAvailability,
@@ -27,7 +28,7 @@ import {
   DAY_LABELS,
   APPOINTMENT_DURATION_OPTIONS,
 } from './schedule.js'
-import { sendNewBookingEmails, sendStatusEmail, sendClientSelfCancelEmails } from './email.js'
+import { sendNewBookingEmails, sendStatusEmail, sendClientSelfCancelEmails, isSmtpConfigured, verifySmtpConnection } from './email.js'
 import {
   authMiddleware,
   checkAdminPassword,
@@ -49,7 +50,15 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, database: 'sqlite' })
+  const bookings = getAllBookings()
+  res.json({
+    ok: true,
+    database: 'sqlite',
+    databasePath,
+    bookingCount: bookings.length,
+    smtpConfigured: isSmtpConfigured(),
+    siteUrl: process.env.SITE_URL || null,
+  })
 })
 
 app.get('/api/slots', (req, res) => {
@@ -313,10 +322,23 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 
-const server = app.listen(PORT, () => {
-  console.log(`\n🌸 La Vie API → http://localhost:${PORT}`)
-  console.log(`   Baza: data/bookings.db`)
-  console.log(`   Admin: http://localhost:5173/admin\n`)
+const server = app.listen(PORT, async () => {
+  console.log(`\n🌸 La Vie API → port ${PORT}`)
+  console.log(`   Baza: ${databasePath}`)
+  console.log(`   SITE_URL: ${process.env.SITE_URL || '(nije podešen)'}`)
+  console.log(`   SALON_EMAIL: ${process.env.SALON_EMAIL || '(nije podešen)'}`)
+
+  if (!isSmtpConfigured()) {
+    console.warn('   ⚠️  SMTP nije podešen — mejlovi se NE šalju. Postavi SMTP_USER i SMTP_PASS na Renderu.')
+  } else {
+    const smtp = await verifySmtpConnection()
+    if (smtp.ok) {
+      console.log('   ✅ SMTP konekcija OK')
+    } else {
+      console.error(`   ❌ SMTP greška: ${smtp.error}`)
+    }
+  }
+  console.log('')
 })
 
 server.on('error', (err) => {

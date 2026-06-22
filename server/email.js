@@ -13,8 +13,26 @@ function getTransporter() {
     host: SMTP_HOST,
     port: Number(SMTP_PORT || 587),
     secure: SMTP_PORT === '465',
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    auth: { user: SMTP_USER, pass: SMTP_PASS.replace(/\s/g, '') },
   })
+}
+
+export function isSmtpConfigured() {
+  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env
+  return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS)
+}
+
+export async function verifySmtpConnection() {
+  const transporter = getTransporter()
+  if (!transporter) {
+    return { ok: false, error: 'SMTP nije podešen (SMTP_USER / SMTP_PASS na Renderu)' }
+  }
+  try {
+    await transporter.verify()
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
 }
 
 function baseTemplate(title, body) {
@@ -77,19 +95,23 @@ function cancelButton(booking) {
 async function sendMail({ to, subject, html }) {
   const transporter = getTransporter()
   if (!transporter) {
-    console.log('\n📧 EMAIL (SMTP nije podešen):\n')
-    console.log(`   To: ${to}`)
-    console.log(`   Subject: ${subject}\n`)
+    console.warn(`📧 EMAIL preskočen (SMTP nije podešen) → To: ${to}, Subject: ${subject}`)
     return { sent: false, logged: true }
   }
 
-  await transporter.sendMail({
-    from: `"${salonName}" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    html,
-  })
-  return { sent: true }
+  try {
+    await transporter.sendMail({
+      from: `"${salonName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+    })
+    console.log(`📧 Email poslat → ${to}: ${subject}`)
+    return { sent: true }
+  } catch (err) {
+    console.error(`📧 Email GREŠKA → ${to}: ${err.message}`)
+    throw err
+  }
 }
 
 export async function sendNewBookingEmails(booking) {
