@@ -5,7 +5,9 @@ const salonEmail = process.env.SALON_EMAIL || 'majstorovic9@gmail.com'
 const salonName = process.env.SALON_NAME || 'La Vie Spray Tan Salon'
 
 function getSiteUrl() {
-  return process.env.SITE_URL || 'http://localhost:5173'
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '')
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'http://localhost:5173'
 }
 
 export function getEmailProvider() {

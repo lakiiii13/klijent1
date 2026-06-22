@@ -7,24 +7,29 @@ export function checkAdminPassword(password) {
   return password === expected
 }
 
-export function authMiddleware(req, res, next) {
-  const sessionId = req.cookies?.[SESSION_COOKIE]
-  const session = getAdminSession(sessionId)
+export async function authMiddleware(req, res, next) {
+  try {
+    const sessionId = req.cookies?.[SESSION_COOKIE]
+    const session = await getAdminSession(sessionId)
 
-  if (!session) {
-    return res.status(401).json({ error: 'Niste prijavljeni. Ulogujte se ponovo.' })
+    if (!session) {
+      return res.status(401).json({ error: 'Niste prijavljeni. Ulogujte se ponovo.' })
+    }
+
+    req.adminSession = session
+    next()
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Greška pri autentifikaciji.' })
   }
-
-  req.adminSession = session
-  next()
 }
 
 export function clearSessionCookie(res) {
   res.clearCookie(SESSION_COOKIE, { path: '/' })
 }
 
-export function logoutSession(req, res) {
+export async function logoutSession(req, res) {
   const sessionId = req.cookies?.[SESSION_COOKIE]
-  deleteAdminSession(sessionId)
+  await deleteAdminSession(sessionId)
   clearSessionCookie(res)
 }

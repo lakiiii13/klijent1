@@ -25,7 +25,7 @@ export const APPOINTMENT_DURATION_OPTIONS = [10, 20, 30, 40, 50, 60, 90, 120]
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 
-function loadConfig() {
+async function loadConfig() {
   return getSalonSettings()
 }
 
@@ -83,8 +83,8 @@ function findPeriodContaining(periods, timeStr, appointmentDuration) {
   })
 }
 
-export function getAllSlotsWithAvailability(dateStr, bookedSlots = []) {
-  const { schedule, appointmentDuration } = loadConfig()
+export async function getAllSlotsWithAvailability(dateStr, bookedSlots = []) {
+  const { schedule, appointmentDuration } = await loadConfig()
   const date = new Date(`${dateStr}T12:00:00`)
   const periods = getDayPeriods(schedule, date.getDay())
 
@@ -116,14 +116,13 @@ export function getAllSlotsWithAvailability(dateStr, bookedSlots = []) {
   return slots.sort((a, b) => parseTime(a.time) - parseTime(b.time))
 }
 
-export function getAvailableSlots(dateStr, bookedSlots = []) {
-  return getAllSlotsWithAvailability(dateStr, bookedSlots)
-    .filter((s) => s.available)
-    .map((s) => s.time)
+export async function getAvailableSlots(dateStr, bookedSlots = []) {
+  const slots = await getAllSlotsWithAvailability(dateStr, bookedSlots)
+  return slots.filter((s) => s.available).map((s) => s.time)
 }
 
-export function isDateBookable(dateStr) {
-  const { schedule } = loadConfig()
+export async function isDateBookable(dateStr) {
+  const { schedule } = await loadConfig()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const date = new Date(`${dateStr}T12:00:00`)
@@ -132,8 +131,8 @@ export function isDateBookable(dateStr) {
   return Boolean(periods?.length)
 }
 
-export function isTimeSlotAvailableOnDate(dateStr, timeStr, bookedSlots = []) {
-  const { schedule, appointmentDuration } = loadConfig()
+export async function isTimeSlotAvailableOnDate(dateStr, timeStr, bookedSlots = []) {
+  const { schedule, appointmentDuration } = await loadConfig()
   const date = new Date(`${dateStr}T12:00:00`)
   const periods = getDayPeriods(schedule, date.getDay())
   if (!periods?.length) return false
