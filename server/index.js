@@ -28,7 +28,7 @@ import {
   DAY_LABELS,
   APPOINTMENT_DURATION_OPTIONS,
 } from './schedule.js'
-import { sendNewBookingEmails, sendStatusEmail, sendClientSelfCancelEmails, isEmailConfigured, getEmailProvider, verifyEmailConnection } from './email.js'
+import { sendNewBookingEmails, sendStatusEmail, sendClientSelfCancelEmails, sendTestEmail, isEmailConfigured, getEmailProvider, verifyEmailConnection } from './email.js'
 import {
   authMiddleware,
   checkAdminPassword,
@@ -66,6 +66,10 @@ app.get('/api/health', (_req, res) => {
     slotIntervalMinutes: 10,
     smtpConfigured: isEmailConfigured(),
     emailProvider: getEmailProvider(),
+    emailHelp:
+      !isEmailConfigured() && isProd
+        ? 'Dodaj BREVO_API_KEY i BREVO_SENDER_EMAIL u Render → Environment, pa redeploy.'
+        : null,
     siteUrl: process.env.SITE_URL || null,
   })
 })
@@ -186,6 +190,24 @@ app.post('/api/admin/logout', (req, res) => {
 
 app.get('/api/admin/bookings', authMiddleware, (_req, res) => {
   res.json(getAllBookings())
+})
+
+app.post('/api/admin/test-email', authMiddleware, async (req, res) => {
+  try {
+    const to = req.body?.email?.trim() || process.env.SALON_EMAIL
+    if (!to) return res.status(400).json({ error: 'Nema email adrese za test.' })
+    if (!isEmailConfigured()) {
+      return res.status(503).json({
+        error: 'Email nije podešen. Na Renderu dodaj BREVO_API_KEY u Environment.',
+        emailProvider: null,
+      })
+    }
+    await sendTestEmail(to)
+    res.json({ ok: true, message: `Test mejl poslat na ${to}`, provider: getEmailProvider() })
+  } catch (err) {
+    console.error('Test email greška:', err.message)
+    res.status(500).json({ error: err.message, provider: getEmailProvider() })
+  }
 })
 
 app.post('/api/admin/bookings', authMiddleware, async (req, res) => {

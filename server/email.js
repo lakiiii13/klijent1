@@ -216,6 +216,19 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
+export async function sendTestEmail(to) {
+  await sendMail({
+    to,
+    subject: 'La Vie — test mejl',
+    html: baseTemplate(
+      'Test mejl uspešan',
+      `<p style="font-family:sans-serif;font-size:14px;color:#6B5E58;">
+         Email sistem radi. Ovo je probni mejl sa La Vie sajta.
+       </p>`
+    ),
+  })
+}
+
 export async function sendNewBookingEmails(booking) {
   const service = serviceLabels[booking.service] || booking.service
 
