@@ -137,7 +137,7 @@ export function deleteAdminSession(id) {
 import { normalizeSchedule } from './schedule-normalize.js'
 
 export const DEFAULT_SALON_SETTINGS = {
-  appointmentDuration: 60,
+  appointmentDuration: 20,
   schedule: {
     0: null,
     1: [{ start: '08:00', end: '20:00' }],
@@ -165,7 +165,7 @@ export function getSalonSettings() {
   }
 
   const duration = Number(map.appointment_duration)
-  const allowedDurations = [20, 30, 40, 50, 60, 90, 120]
+  const allowedDurations = [10, 20, 30, 40, 50, 60, 90, 120]
   return {
     appointmentDuration: allowedDurations.includes(duration)
       ? duration

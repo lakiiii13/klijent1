@@ -62,6 +62,8 @@ app.get('/api/health', (_req, res) => {
     database: 'sqlite',
     databasePath,
     bookingCount: bookings.length,
+    appointmentDurationMinutes: getSalonSettings().appointmentDuration,
+    slotIntervalMinutes: 10,
     smtpConfigured: isEmailConfigured(),
     emailProvider: getEmailProvider(),
     siteUrl: process.env.SITE_URL || null,

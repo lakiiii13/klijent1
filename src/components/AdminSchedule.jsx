@@ -44,8 +44,8 @@ function formatGap(beforeEnd, afterStart) {
 }
 
 export default function AdminSchedule() {
-  const [appointmentDuration, setAppointmentDuration] = useState(60)
-  const [durationOptions, setDurationOptions] = useState([20, 30, 40, 50, 60, 90, 120])
+  const [appointmentDuration, setAppointmentDuration] = useState(20)
+  const [durationOptions, setDurationOptions] = useState([10, 20, 30, 40, 50, 60, 90, 120])
   const [schedule, setSchedule] = useState(normalizeSchedule({}))
   const [dayLabels, setDayLabels] = useState([])
   const [loading, setLoading] = useState(true)
@@ -56,8 +56,8 @@ export default function AdminSchedule() {
   useEffect(() => {
     getAdminSettings()
       .then((data) => {
-        setAppointmentDuration(data.appointmentDuration ?? 60)
-        setDurationOptions(data.durationOptions || [20, 30, 40, 50, 60, 90, 120])
+        setAppointmentDuration(data.appointmentDuration ?? 20)
+        setDurationOptions(data.durationOptions || [10, 20, 30, 40, 50, 60, 90, 120])
         setSchedule(normalizeSchedule(data.schedule))
         setDayLabels(data.dayLabels || [])
       })
@@ -134,7 +134,9 @@ export default function AdminSchedule() {
       <section className="bg-white p-6 shadow-sm">
         <h2 className="mb-1 font-serif text-xl text-ink">Trajanje termina</h2>
         <p className="mb-5 text-sm text-ink-muted">
-          Koliko minuta traje jedan tretman. Termini na sajtu idu na svakih 10 minuta.
+          <strong>Trajanje tretmana</strong> — koliko minuta jedan klijent zauzima u salonu.
+          Slotovi na sajtu idu na svakih <strong>10 minuta</strong> (08:00, 08:10, 08:20…), ali to
+          nije trajanje — ako je tretman 20 min, rezervacija u 11:00 zauzima 11:00 i 11:10.
         </p>
         <div className="flex flex-wrap gap-2">
           {durationOptions.map((mins) => (

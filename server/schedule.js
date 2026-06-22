@@ -21,7 +21,7 @@ export const DAY_LABELS = [
 
 export const SLOT_INTERVAL = 10
 
-export const APPOINTMENT_DURATION_OPTIONS = [20, 30, 40, 50, 60, 90, 120]
+export const APPOINTMENT_DURATION_OPTIONS = [10, 20, 30, 40, 50, 60, 90, 120]
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 
@@ -156,7 +156,7 @@ export function formatDateSr(dateStr) {
 
 export function validateScheduleInput(schedule, appointmentDuration) {
   if (!APPOINTMENT_DURATION_OPTIONS.includes(appointmentDuration)) {
-    return 'Trajanje termina mora biti 20, 30, 40, 50, 60, 90 ili 120 minuta.'
+    return 'Trajanje termina mora biti 10, 20, 30, 40, 50, 60, 90 ili 120 minuta.'
   }
 
   if (!schedule || typeof schedule !== 'object') {
