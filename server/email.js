@@ -14,6 +14,9 @@ function getTransporter() {
     port: Number(SMTP_PORT || 587),
     secure: SMTP_PORT === '465',
     auth: { user: SMTP_USER, pass: SMTP_PASS.replace(/\s/g, '') },
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 15_000,
   })
 }
 

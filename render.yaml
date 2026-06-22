@@ -26,4 +26,4 @@ services:
       - key: SMTP_PASS
         sync: false
       - key: SITE_URL
-        sync: false
+        value: https://la-vie-salon.onrender.com

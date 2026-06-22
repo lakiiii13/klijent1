@@ -41,6 +41,12 @@ const PORT = process.env.PORT || 3001
 const SESSION_DAYS = 7
 const isProd = process.env.NODE_ENV === 'production'
 
+function sendEmailsInBackground(task, label) {
+  Promise.resolve()
+    .then(task)
+    .catch((err) => console.error(`Email nije poslat (${label}):`, err.message))
+}
+
 if (isProd) {
   app.set('trust proxy', 1)
 }
@@ -101,11 +107,7 @@ app.post('/api/bookings', async (req, res) => {
       notes: notes?.trim() || '',
     })
 
-    try {
-      await sendNewBookingEmails(booking)
-    } catch (emailErr) {
-      console.error('Email nije poslat, ali rezervacija je sačuvana:', emailErr.message)
-    }
+    sendEmailsInBackground(() => sendNewBookingEmails(booking), 'nova rezervacija')
 
     res.status(201).json({
       message: 'Rezervacija je poslata! Potvrdu ćete dobiti na email.',
@@ -142,11 +144,7 @@ app.post('/api/bookings/cancel/:token', async (req, res) => {
 
     const booking = cancelBookingByToken(req.params.token)
 
-    try {
-      await sendClientSelfCancelEmails(booking)
-    } catch (emailErr) {
-      console.error('Email nije poslat, ali otkazivanje je sačuvano:', emailErr.message)
-    }
+    sendEmailsInBackground(() => sendClientSelfCancelEmails(booking), 'otkazivanje')
 
     res.json({ message: 'Termin je uspešno otkazan.', booking: { id: booking.id, status: booking.status } })
   } catch (err) {
@@ -223,11 +221,7 @@ app.post('/api/admin/bookings', authMiddleware, async (req, res) => {
     )
 
     if (booking.email) {
-      try {
-        await sendStatusEmail(booking, bookingStatus)
-      } catch (emailErr) {
-        console.error('Email nije poslat, ali rezervacija je sačuvana:', emailErr.message)
-      }
+      sendEmailsInBackground(() => sendStatusEmail(booking, bookingStatus), 'admin rezervacija')
     }
 
     res.status(201).json({
@@ -297,12 +291,8 @@ app.patch('/api/admin/bookings/:id', authMiddleware, async (req, res) => {
 
     const booking = updateBookingStatus(id, status)
 
-    try {
-      if (status === 'confirmed' || status === 'cancelled') {
-        await sendStatusEmail(booking, status)
-      }
-    } catch (emailErr) {
-      console.error('Email nije poslat, ali status je sačuvan u bazi:', emailErr.message)
+    if (status === 'confirmed' || status === 'cancelled') {
+      sendEmailsInBackground(() => sendStatusEmail(booking, status), `status ${status}`)
     }
 
     res.json({ message: 'Status ažuriran.', booking })
