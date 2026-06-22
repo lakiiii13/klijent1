@@ -85,33 +85,6 @@ app.get('/api/health', async (_req, res) => {
   }
 })
 
-// TEMP: ukloni posle testiranja emaila na produkciji
-app.get('/api/test-email', async (_req, res) => {
-  try {
-    const to = process.env.SALON_EMAIL
-    if (!to) {
-      return res.status(400).json({ ok: false, error: 'SALON_EMAIL nije podešen.' })
-    }
-    if (!isEmailConfigured()) {
-      return res.status(503).json({
-        ok: false,
-        error: 'Email nije podešen. Dodaj BREVO_API_KEY u Environment.',
-        provider: null,
-      })
-    }
-    await sendTestEmail(to)
-    res.json({
-      ok: true,
-      to,
-      provider: getEmailProvider(),
-      message: `Test mejl poslat na ${to}`,
-    })
-  } catch (err) {
-    console.error('Test email greška:', err.message)
-    res.status(500).json({ ok: false, error: err.message, provider: getEmailProvider() })
-  }
-})
-
 app.get('/api/slots', async (req, res) => {
   try {
     if (!isSupabaseConfigured()) {
