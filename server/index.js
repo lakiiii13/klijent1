@@ -61,6 +61,7 @@ app.get('/api/health', (_req, res) => {
     ok: true,
     database: 'sqlite',
     databasePath,
+    databasePersistent: databasePath.startsWith('/var/data'),
     bookingCount: bookings.length,
     appointmentDurationMinutes: getSalonSettings().appointmentDuration,
     slotIntervalMinutes: 10,
