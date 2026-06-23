@@ -195,6 +195,39 @@ function cancelButton(booking) {
     </div>`
 }
 
+function sprayTanCareInstructions() {
+  const listStyle =
+    'margin:0;padding:0 0 0 18px;font-family:sans-serif;font-size:13px;color:#6B5E58;line-height:1.75;'
+  const sectionTitle =
+    'margin:0 0 10px;font-family:sans-serif;font-size:11px;font-weight:600;letter-spacing:0.14em;color:#8B5E4A;text-transform:uppercase;'
+
+  return `
+    <div style="margin-top:28px;border:1px solid #EDE6DF;background:#FDFBF9;">
+      <div style="padding:18px 20px;border-bottom:1px solid #EDE6DF;background:#F5F0EB;">
+        <p style="margin:0;font-family:Georgia,serif;font-size:17px;color:#2C2420;">
+          Priprema i nega — Spray Tan
+        </p>
+        <p style="margin:6px 0 0;font-family:sans-serif;font-size:12px;color:#A0715A;">
+          Molimo vas da pročitate pre dolaska na termin.
+        </p>
+      </div>
+      <div style="padding:20px;">
+        <p style="${sectionTitle}">Pre tretmana</p>
+        <ul style="${listStyle}">
+          <li style="margin-bottom:8px;">Piling, brijanje, depilaciju uraditi 24h ranije. Idealno 48h pre tretmana.</li>
+          <li style="margin-bottom:8px;">Razmak između zakazanog termina i tuširanja ne bi trebalo biti manji od 4h.</li>
+          <li>Na potamnjivanje doći u tamnijoj, široj, komotnijoj odeći. Izbegavati sintetičke materijale.</li>
+        </ul>
+        <p style="${sectionTitle} margin-top:22px;">Posle tretmana</p>
+        <ul style="${listStyle}">
+          <li style="margin-bottom:8px;">Izbegavati kontakt sa vodom, prekomerno znojenje i teže fizičke aktivnosti.</li>
+          <li style="margin-bottom:8px;">Nakon potamnjivanja ne preporučuje se nanošenje dezodoransa, šminke i krema.</li>
+          <li>Redovna hidratacija kože unošenjem dovoljne količine tečnosti i svakodnevnim nanošenjem mleka za telo.</li>
+        </ul>
+      </div>
+    </div>`
+}
+
 async function sendMail({ to, subject, html }) {
   const provider = getEmailProvider()
   if (!provider) {
@@ -281,6 +314,7 @@ export async function sendStatusEmail(booking, status) {
            Vidimo se uskoro!
          </p>
          ${bookingDetails(booking)}
+         ${booking.service === 'spray-tan' ? sprayTanCareInstructions() : ''}
          <p style="margin:24px 0 0;padding:16px;background:#F5F0EB;font-family:sans-serif;font-size:13px;color:#6B5646;">
            ✅ Status: <strong>Potvrđeno</strong>
          </p>
