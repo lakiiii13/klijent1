@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import Hero from '../components/Hero'
 import Philosophy from '../components/Philosophy'
 import Services from '../components/Services'
+import LocationNote from '../components/LocationNote'
 import Lookbook from '../components/Lookbook'
 import Testimonial from '../components/Testimonial'
 import Contact from '../components/Contact'
@@ -49,6 +50,7 @@ export default function HomePage() {
         <Hero />
         <Philosophy />
         <Services />
+        <LocationNote />
         <Contact />
         <Lookbook />
         <Testimonial />
